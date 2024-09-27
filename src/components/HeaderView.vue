@@ -1,5 +1,5 @@
 <template>
-    <div class="card" style="font-size: 1.3em;">
+    <div class="card" style="font-size: 1.3em; font-weight: bolder;">
         <Menubar :model="items" />
     </div>
 </template>

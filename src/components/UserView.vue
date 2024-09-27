@@ -1,7 +1,8 @@
 <template>
 <div class="card" >
 
-    <DataTable :value="users" tableStyle="min-width: 50rem" paginator :rows="5" :rowsPerPageOptions="[5,10,20,50]" paginatorTemplate="RowsPerPageDropdown FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink" currentPageReportTemplate="{first} to {last} of {totalRecords}">
+    <DataTable :value="users" tableStyle="min-width: 50rem" paginator :rows="5" :rowsPerPageOptions="[5,10,20,50]" paginatorTemplate="RowsPerPageDropdown FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink" currentPageReportTemplate="{first} to {last} of {totalRecords}"
+    >
 
 
         <template #header>

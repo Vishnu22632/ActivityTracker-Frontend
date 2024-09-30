@@ -16,10 +16,14 @@ import InputText from 'primevue/inputtext';
 import Button from 'primevue/button';
 import router from './router'
 import Dialog from 'primevue/dialog';
+import Textarea from 'primevue/textarea';
+import AutoComplete from 'primevue/autocomplete';
+
 
 // For confim Dialog Box 
 import ConfirmDialog from 'primevue/confirmdialog';
 import ConfirmationService from 'primevue/confirmationservice';
+
 
 const app = createApp(App)
 
@@ -47,6 +51,8 @@ app.component('Button',Button);
 app.component('Dialog',Dialog);
 app.component('Toast',Toast);
 app.component('ConfirmDialog',ConfirmDialog);
+app.component('Textarea',Textarea);
+app.component('AutoComplete',AutoComplete);
 
 app.mount('#app');
 

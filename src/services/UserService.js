@@ -16,6 +16,22 @@ class UserService {
     }
 
 
+    // New saveUser method to send the new user data to the backend
+    saveUser(user){
+        return axios.post(api_url,user);
+    }
+
+    // Update user data
+    updateUser(id,user){
+        return axios.put(`${api_url}/${user.id}`,user);
+    }
+
+    // Delete user
+    deleteUser(id){
+        return axios.delete(`${api_url}/${id}`);
+    }
+
+
 }
 
 export default new UserService();

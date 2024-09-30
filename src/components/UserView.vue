@@ -1,15 +1,11 @@
 <template>
 <div class="card">
 
+    <div class="button-container">
+        <Button @click="visible = true"><span class="pi pi-plus"></span>ADD USER</Button>
+    </div>
+
     <DataTable :value="users" tableStyle="min-width: 50rem" :paginator="true" :rows="rows" :lazy="true" :rowsPerPageOptions="[5,10,20,50]" :totalRecords="totalRecords" paginatorTemplate="RowsPerPageDropdown FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink" currentPageReportTemplate="{first} to {last} of {totalRecords}" @page="onPageChange">
-
-        <template #header>
-            <div class="flex justify-content-end">
-
-                <InputText v-model="globalFilter" placeholder="Keyword Search" @input="onGlobalSearch"/>
-
-            </div>
-        </template>
 
         <Column>
             <template #header>
@@ -68,7 +64,44 @@
         </Column>
 
         <Column field="password" header="PASSWORD"></Column>
+
+        <Column header="ACTION">
+            <template #body="slotProps">
+
+                <Button style="margin-right: 3px;" icon="pi pi-pencil" class="p-button-primary" @click="editUser(slotProps.data)" />
+
+                <Button icon="pi pi-trash" class="p-button-danger" @click="deleteUser(slotProps.data)" />
+
+            </template>
+        </Column>
+
     </DataTable>
+
+    <!-- **********************Add or Edit user*************************** -->
+    <Dialog v-model:visible="visible" modal header="Edit Profile" :style="{ width: '30rem' }">
+
+        <div class="flex items-center gap-4 mb-4">
+            <label for="fullname" class="font-semibold w-24">FullName</label>
+            <InputText id="fullname" v-model="userForm.fullName" class="flex-auto" autocomplete="off" />
+        </div>
+        <div class="flex items-center gap-6 mb-4">
+            <label for="email" class="font-semibold w-24">Email</label>
+            <InputText id="email" v-model="userForm.email" class="flex-auto" autocomplete="off" />
+        </div>
+        <div class="flex items-center gap-5 mb-4">
+            <label for="address" class="font-semibold w-24">Address</label>
+            <InputText id="address" v-model="userForm.address" class="flex-auto" autocomplete="off" />
+        </div>
+        <div class="flex items-center gap-4 mb-4">
+            <label for="password" class="font-semibold w-24">Password</label>
+            <InputText id="password" v-model="userForm.password" type="password" class="flex-auto" autocomplete="off" />
+        </div>
+        <div class="flex justify-content-center gap-2">
+            <Button type="button" label="Cancel" severity="secondary" @click="visible = false"></Button>
+            <Button type="button" label="Save" @click="saveUser"></Button>
+        </div>
+    </Dialog>
+
 </div>
 </template>
 
@@ -83,6 +116,7 @@ const users = ref([]);
 const rows = ref(5);
 const totalRecords = ref(0);
 const first = ref(0);
+const visible = ref(false);
 
 const filters = ref({
     id: '',
@@ -91,12 +125,71 @@ const filters = ref({
     address: ''
 });
 
-const globalFilter = ref('');
+// Reactive veriable so that the entered values can be saved 
+const userForm = ref({
+    fullName: '',
+    email: '',
+    address: '',
+    password: ''
+});
+
+// Method to open the dialog for editing the user
+const editUser = (user) => {
+    userForm.value = {
+        ...user // copy selected user's data into form
+    };
+    visible.value = true; // open the dialog for editing
+
+}
+
+// Handle adding and editing users
+const saveUser = () => {
+    if (userForm.value.id) {
+        // Update user if id exist
+        UserService.updateUser(userForm.value.id,userForm.value).then(() => {
+            visible.value = false;
+            resetForm();
+            loadUsers();
+        }).catch(error => {
+            console.log("Error updating user:", error);
+        });
+    } else {
+        // Create new user
+        UserService.saveUser(userForm.value).then(() => {
+            visible.value = false;
+            resetForm();
+            loadUsers();
+        }).catch(error => {
+            console.log("Error saving user:", error);
+        });
+    }
+};
+
+// Reset form after saving or canceling
+const resetForm = () => {
+    userForm.value = {
+        fullName: '',
+        email: '',
+        address: '',
+        password: '',
+        id: null
+
+    };
+};
+
+// Delete user method 
+const deleteUser = (user) => {
+    UserService.deleteUser(user.id).then(() => {
+        loadUsers(); // Refresh the list after deletion
+    }).catch(error => {
+        console.log("Error deleting user: ", error);
+    })
+}
 
 // fetch all users when mounted
 
 const loadUsers = (page = 0, size = 5) => {
-    UserService.getUsers(page, size,filters.value).then(response => {
+    UserService.getUsers(page, size, filters.value).then(response => {
         users.value = response.data.content;
         totalRecords.value = response.data.totalElements;
     }).catch(error => {
@@ -104,14 +197,7 @@ const loadUsers = (page = 0, size = 5) => {
     });
 };
 
-const onFilterChange = ()=> {
-    loadUsers();
-};
-
-const onGlobalSearch = () => {
-    filters.value.fullName = globalFilter.value;
-    filters.value.email = globalFilter.value;
-    filters.value.address = globalFilter.value;
+const onFilterChange = () => {
     loadUsers();
 };
 
@@ -129,6 +215,13 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.button-container {
+    margin: 15px 25px;
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 1rem;
+}
+
 .card {
     font-size: 1.3em;
 }

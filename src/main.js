@@ -17,7 +17,9 @@ import Button from 'primevue/button';
 import router from './router'
 import Dialog from 'primevue/dialog';
 
-
+// For confim Dialog Box 
+import ConfirmDialog from 'primevue/confirmdialog';
+import ConfirmationService from 'primevue/confirmationservice';
 
 const app = createApp(App)
 
@@ -34,7 +36,7 @@ app.use(PrimeVue,{
 
 app.use(router);
 app.use(ToastService);
-
+app.use(ConfirmationService);
 
 // Add Components
 app.component('Menubar',Menubar);
@@ -44,7 +46,7 @@ app.component('InputText',InputText);
 app.component('Button',Button);
 app.component('Dialog',Dialog);
 app.component('Toast',Toast);
-
+app.component('ConfirmDialog',ConfirmDialog);
 
 app.mount('#app');
 

@@ -1,12 +1,11 @@
 <template>
 <div class="card">
 
-
     <Toast />
-
+    <ConfirmDialog />
 
     <div class="button-container">
-        <Button @click="visible = true"><span class="pi pi-plus"></span>ADD USER</Button>
+        <Button @click="openAddUserDialog"><span class="pi pi-plus"></span>ADD USER</Button>
     </div>
 
     <DataTable :value="users" tableStyle="min-width: 50rem" :paginator="true" :rows="rows" :lazy="true" :rowsPerPageOptions="[5,10,20,50]" :totalRecords="totalRecords" paginatorTemplate="RowsPerPageDropdown FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink" currentPageReportTemplate="{first} to {last} of {totalRecords}" @page="onPageChange">
@@ -82,7 +81,7 @@
     </DataTable>
 
     <!-- **********************Add or Edit user*************************** -->
-    <Dialog v-model:visible="visible" modal header="Edit Profile" :style="{ width: '30rem' }">
+    <Dialog v-model:visible="visible" @keyup.enter="saveUser" modal :header="dialogHeader" :style="{ width: '30rem' }">
 
         <div class="flex items-center gap-4 mb-4">
             <label for="fullname" class="font-semibold w-24">FullName</label>
@@ -124,8 +123,13 @@ import {
 // Initialize toast service
 const toast = useToast();
 
+// import userConfirm  
+import {
+    useConfirm
+} from "primevue/useconfirm";
+const confirm = useConfirm();
 
-
+const dialogHeader = ref("Add User"); // Reactive variable for dialog header
 
 const users = ref([]);
 const rows = ref(5);
@@ -148,44 +152,92 @@ const userForm = ref({
     password: ''
 });
 
+// open dialog for adding user
+const openAddUserDialog = () => {
+    resetForm(); // Clear the form
+    dialogHeader.value = "Add User"; // Set dialog header for adding user
+    visible.value = true; // open the dialog
+}
+
 // Method to open the dialog for editing the user
 const editUser = (user) => {
     userForm.value = {
-        ...user // copy selected user's data into form
+        ...user // copy selected user's data into form 
     };
+    dialogHeader.value = "Upadate User"; // set dialog header for updating user
     visible.value = true; // open the dialog for editing
 
 }
 
+
 // Handle adding and editing users
 const saveUser = () => {
-    if (userForm.value.id) {
-        // Update user if id exist
-        UserService.updateUser(userForm.value.id,userForm.value).then(() => {
-            toast.add({ severity: 'success', summary: 'Success', detail: 'User updated successfully!', life: 3000 });
+    const operation = userForm.value.id ? "update" : "add"; // Determine operation type
 
-            visible.value = false;
-            resetForm();
-            loadUsers();
-        }).catch(error => {
-            toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to update user.', life: 3000 });
+    confirm.require({
+        message: `Are you sure you want to ${operation} this user?`,
+        header: 'Confirmation',
+        icon: 'pi pi-exclamation-triangle',
+        accept: () => {
+            // Proceed with the save or update operation
+            if (userForm.value.id) {
+                // Update user if id exists
+                UserService.updateUser(userForm.value.id, userForm.value).then(() => {
+                    toast.add({
+                        severity: 'success',
+                        summary: 'Success',
+                        detail: 'User updated successfully!',
+                        life: 3000
+                    });
 
-            console.log("Error updating user:", error);
-        });
-    } else {
-        // Create new user
-        UserService.saveUser(userForm.value).then(() => {
-            toast.add({ severity: 'success', summary: 'Success', detail: 'User added successfully!', life: 3000 });
+                    visible.value = false;
+                    resetForm();
+                    loadUsers();
+                }).catch(error => {
+                    toast.add({
+                        severity: 'error',
+                        summary: 'Error',
+                        detail: 'Failed to update user.',
+                        life: 3000
+                    });
 
-            visible.value = false;
-            resetForm();
-            loadUsers();
-        }).catch(error => {
-            toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to add user.', life: 3000 });
+                    console.log("Error updating user:", error);
+                });
+            } else {
+                // Create new user
+                UserService.saveUser(userForm.value).then(() => {
+                    toast.add({
+                        severity: 'success',
+                        summary: 'Success',
+                        detail: 'User added successfully!',
+                        life: 3000
+                    });
 
-            console.log("Error saving user:", error);
-        });
-    }
+                    visible.value = false;
+                    resetForm();
+                    loadUsers();
+                }).catch(error => {
+                    toast.add({
+                        severity: 'error',
+                        summary: 'Error',
+                        detail: 'Failed to add user.',
+                        life: 3000
+                    });
+
+                    console.log("Error saving user:", error);
+                });
+            }
+        },
+        reject: () => {
+            // Optionally handle rejection
+            toast.add({
+                severity: 'info',
+                summary: 'Cancelled',
+                detail: `User ${operation} operation cancelled.`,
+                life: 3000
+            });
+        }
+    });
 };
 
 // Reset form after saving or canceling
@@ -202,15 +254,35 @@ const resetForm = () => {
 
 // Delete user method 
 const deleteUser = (user) => {
-    UserService.deleteUser(user.id).then(() => {
-        toast.add({ severity: 'success', summary: 'Success', detail: 'User deleted successfully!', life: 3000 });
 
-        loadUsers(); // Refresh the list after deletion
-    }).catch(error => {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete user.', life: 3000 });
+    confirm.require({
+        message: 'Are you sure you want to delete this user?',
+        header: 'Confirmation',
+        icon: 'pi pi-exclamation-triangle',
+        accept: () => {
+            UserService.deleteUser(user.id).then(() => {
+                toast.add({
+                    severity: 'success',
+                    summary: 'Success',
+                    detail: 'User deleted successfully!',
+                    life: 3000
+                });
 
-        console.log("Error deleting user: ", error);
-    })
+                loadUsers(); // Refresh the list after deletion
+            }).catch(error => {
+                toast.add({
+                    severity: 'error',
+                    summary: 'Error',
+                    detail: 'Failed to delete user.',
+                    life: 3000
+                });
+
+                console.log("Error deleting user: ", error);
+            })
+        }
+
+    });
+
 }
 
 // fetch all users when mounted
@@ -220,7 +292,12 @@ const loadUsers = (page = 0, size = 5) => {
         users.value = response.data.content;
         totalRecords.value = response.data.totalElements;
     }).catch(error => {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to fetch users.', life: 3000 });
+        toast.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Failed to fetch users.',
+            life: 3000
+        });
 
         console.log('Error Fetching data : ', error);
     });

@@ -6,6 +6,9 @@ import Aura from '@primevue/themes/aura';
 import 'primeicons/primeicons.css';
 import 'primeflex/primeflex.css';
 
+import Toast from 'primevue/toast';
+import ToastService from 'primevue/toastservice';
+
 import Menubar from 'primevue/menubar';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
@@ -30,7 +33,7 @@ app.use(PrimeVue,{
 
 
 app.use(router);
-
+app.use(ToastService);
 
 
 // Add Components
@@ -40,6 +43,8 @@ app.component('Column',Column);
 app.component('InputText',InputText);
 app.component('Button',Button);
 app.component('Dialog',Dialog);
+app.component('Toast',Toast);
+
 
 app.mount('#app');
 

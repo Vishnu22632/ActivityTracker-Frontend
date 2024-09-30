@@ -1,6 +1,10 @@
 <template>
 <div class="card">
 
+
+    <Toast />
+
+
     <div class="button-container">
         <Button @click="visible = true"><span class="pi pi-plus"></span>ADD USER</Button>
     </div>
@@ -112,6 +116,17 @@ import {
 } from 'vue';
 import UserService from '@/services/UserService';
 
+// import useToast
+import {
+    useToast
+} from 'primevue/usetoast';
+
+// Initialize toast service
+const toast = useToast();
+
+
+
+
 const users = ref([]);
 const rows = ref(5);
 const totalRecords = ref(0);
@@ -147,19 +162,27 @@ const saveUser = () => {
     if (userForm.value.id) {
         // Update user if id exist
         UserService.updateUser(userForm.value.id,userForm.value).then(() => {
+            toast.add({ severity: 'success', summary: 'Success', detail: 'User updated successfully!', life: 3000 });
+
             visible.value = false;
             resetForm();
             loadUsers();
         }).catch(error => {
+            toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to update user.', life: 3000 });
+
             console.log("Error updating user:", error);
         });
     } else {
         // Create new user
         UserService.saveUser(userForm.value).then(() => {
+            toast.add({ severity: 'success', summary: 'Success', detail: 'User added successfully!', life: 3000 });
+
             visible.value = false;
             resetForm();
             loadUsers();
         }).catch(error => {
+            toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to add user.', life: 3000 });
+
             console.log("Error saving user:", error);
         });
     }
@@ -180,8 +203,12 @@ const resetForm = () => {
 // Delete user method 
 const deleteUser = (user) => {
     UserService.deleteUser(user.id).then(() => {
+        toast.add({ severity: 'success', summary: 'Success', detail: 'User deleted successfully!', life: 3000 });
+
         loadUsers(); // Refresh the list after deletion
     }).catch(error => {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to delete user.', life: 3000 });
+
         console.log("Error deleting user: ", error);
     })
 }
@@ -193,6 +220,8 @@ const loadUsers = (page = 0, size = 5) => {
         users.value = response.data.content;
         totalRecords.value = response.data.totalElements;
     }).catch(error => {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to fetch users.', life: 3000 });
+
         console.log('Error Fetching data : ', error);
     });
 };

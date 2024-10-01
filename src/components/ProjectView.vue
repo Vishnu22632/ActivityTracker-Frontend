@@ -3,7 +3,7 @@
     <Button @click="visible=true" label="ADD PROJECT" />
 </div>
 
-<div class="card">
+<div class="card" style="font-size: 1.2em;">
     <DataTable :value="projects" tableStyle="min-width: 50rem">
         <Column field="id" header="PID"></Column>
         <Column field="name" header="PROJECT NAME"></Column>
@@ -108,7 +108,7 @@ const saveProject = () => {
     // If the backend only expects an ID for project_manager, extract the ID here
     const projectToSave = { 
         ...project.value, 
-        project_manager: project.value.project_manager ? project.value.project_manager.id : null ,
+       
         
         status: project.value.status ? project.value.status.value : null 
 

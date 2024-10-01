@@ -4,6 +4,11 @@ const api_url = "http://localhost:9696/api/users";
 
 class UserService {
 
+     // Fetch all users without pagination
+     getUsersWithoutPagination() {
+        return axios.get(api_url);
+    }
+
 
     getUsers(page = 0, size = 5,filters ={}){
         return axios.get(api_url,{

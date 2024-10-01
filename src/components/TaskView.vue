@@ -1,6 +1,5 @@
 <template>
-    <h1>This is Task view</h1>
+    This is task page
 </template>
 
-<script setup>
-</script>
+<script></script>

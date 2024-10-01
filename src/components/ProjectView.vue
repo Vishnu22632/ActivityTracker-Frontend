@@ -1,12 +1,10 @@
 <template>
-<div class="card" style="font-size: 1.3em;">
+<div class="card flex justify-content-end">
+    <Button @click="visible=true" label="ADD PROJECT" />
+</div>
 
-    <div class="button-container">
-        <Button @click="visible = true"><span class="pi pi-plus"></span>ADD PROJECT</Button>
-    </div>
-
-    <DataTable :value="projects" paginator :rows="10" :rowsPerPageOptions="[10, 20, 30]" template="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink" currentPageReportTemplate="Showing {first} to {last} of {totalRecords}" tableStyle="min-width: 50rem">
-
+<div class="card">
+    <DataTable :value="projects" tableStyle="min-width: 50rem">
         <Column field="id" header="PID"></Column>
         <Column field="name" header="PROJECT NAME"></Column>
         <Column field="project_manager.fullName" header="PROJECT MANAGER"></Column>
@@ -14,89 +12,112 @@
         <Column field="endDate" header="END DATE"></Column>
         <Column field="status" header="STATUS"></Column>
         <Column field="description" header="DESC"></Column>
-
     </DataTable>
+</div>
 
-    <!-- Add or edit Dialog box -->
+<Dialog v-model:visible="visible" modal header="ADD PROJECT" :style="{ width: '35rem' }">
 
-    <Dialog v-model:visible="visible" modal header="Add Project" :style="{ width: '40rem' }">
-
-        <div class="flex items-center gap-6 mb-4">
-            <label for="pname" class="font-semibold w-24">Project Name :</label>
-            <InputText id="pname" class="flex-auto" autocomplete="off" />
+    <form @submit.prevent="saveProject">
+        
+        <div class="flex items-center gap-4 mb-4">
+            <label for="username" class="font-semibold w-24">PROJECT NAME :</label>
+            <InputText v-model="project.name" id="username" class="flex-auto" autocomplete="off" />
         </div>
         <div class="flex items-center gap-4 mb-4">
-            <label for="pmanager" class="font-semibold w-24">Project Manager :</label>
-
-            <AutoComplete id="pmanager" dropdown v-model="selectedUser" :suggestions="users" field="fullName" placeholder="Select Project Manager"  />
+            <label for="email" class="font-semibold w-24">PROJECT MANAGER :</label>
+            <Select v-model="project.project_manager" :options="users" optionLabel="fullName" placeholder="Select Project Manager" class="w-full md:w-56" />
         </div>
-
-        <div class="flex items-center gap-7 mb-4">
-            <label for="sdate" class="font-semibold w-24">Start Date :</label>
-            <InputText id="sdate" type="date" class="flex-auto" />
-        </div>
-
-        <div class="flex items-center gap-7 mb-4">
-            <label for="edate" class="font-semibold w-24">End Date :</label>
-            <InputText id="edate" type="date" class="flex-auto" />
-        </div>
-
-        <div class="flex items-center gap-5 mb-4">
-            <label for="pstatus" class="font-semibold w-24">Project Status :</label>
-            <InputText id="pstatus" type="text" class="flex-auto" autocomplete="off" />
-
-        </div>
-
+        <label>{{ project.project_manager }}</label>
         <div class="flex items-center gap-6 mb-4">
-            <label for="pdesc" class="font-semibold w-24">Project Desc:</label>
-            <Textarea id="pdesc" v-model="value" rows="3" cols="50" />
+            <label for="sdate" class="font-semibold w-24">START DATE :</label>
+            <InputText v-model="project.startDate" type="date" id="sdate" class="flex-auto" autocomplete="off" />
+        </div>
+        <div class="flex items-center gap-8 mb-4">
+            <label for="edate" class="font-semibold w-24">END DATE :</label>
+            <InputText v-model="project.endDate" type="date" id="edate" class="flex-auto" autocomplete="off" />
+        </div>
 
-            </div>
+        <div class="flex items-center gap-4 mb-4">
+            <label for="pstatus" class="font-semibold w-24">PROJECT STATUS : </label>
+            <Select v-model="project.status" :options="statuses" optionLabel="label" placeholder="Select Project Status" class="w-full md:w-56" />        
+        </div>
+
+        <div class="flex items-center gap-5 mb-8">
+            <label for="pdesc" class="font-semibold w-24">DESCRIPTION</label>
+            <InputText v-model="project.description" id="pdesc" class="flex-auto" autocomplete="off" />
+        </div>
+
 
         <div class="flex justify-content-center gap-2">
             <Button type="button" label="Cancel" severity="secondary" @click="visible = false"></Button>
-            <Button type="button" label="Save" @click="visible = false"></Button>
+            <Button type="submit" label="Save" ></Button>
         </div>
-
-    </Dialog>
-
-</div>
+    </form>
+</Dialog>
 </template>
 
 <script setup>
+// All import here
+
 import {
     ref,
     onMounted
 } from 'vue';
-
 import ProjectService from '@/services/ProjectService';
+import FetchAllUsers from '@/services/FetchAllUsers';
 
-const projects = ref([]);
+const projects = ref();
 const visible = ref(false);
+const users = ref();
+
+const project = ref({
+    name: '',
+    project_manager: null,
+    startDate: '',
+    endDate: '',
+    status: '',
+    description: ''
+});
+
+const statuses = ref([
+    {label: 'PENDING', value: 'PENDING' },
+    {label: 'ONGOING', value: 'ONGOING'},
+    {label: 'COMPLETED', value: 'COMPLETED'}
+]);
+
+
 
 onMounted(() => {
+    loadProjects();
+    loadUsers();
+});
+
+const loadProjects = () => {
     ProjectService.getProjects().then((response) => {
         projects.value = response.data;
     });
-});
+};
 
+const loadUsers = () =>{
+    FetchAllUsers.getAllUsers().then((response)=>{
+        users.value = response.data;
+    });
+};
+
+const saveProject = () => {
+    // If the backend only expects an ID for project_manager, extract the ID here
+    const projectToSave = { 
+        ...project.value, 
+        project_manager: project.value.project_manager ? project.value.project_manager.id : null ,
+        
+        status: project.value.status ? project.value.status.value : null 
+
+    };
+    
+    ProjectService.saveProject(projectToSave).then(() => {
+        visible.value = false;
+        loadProjects();
+    });
+};
 
 </script>
-
-<style scoped>
-.button-container {
-    margin: 15px 25px;
-    display: flex;
-    justify-content: flex-end;
-    margin-bottom: 1rem;
-}
-</style>
-
-
-
-
-
-
-
-
-

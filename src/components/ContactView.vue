@@ -1,17 +1,33 @@
+import axios from "axios";
+
+const api_url_project = "http://localhost:9696/api/projects";
+
+class ProjectService{
+
+    getProjects(){
+        return axios.get(api_url_project);
+    }
+
+    
+
+}
+
+export default new ProjectService();
+
+
 <template>
-    This is contact page
-</template>
-
-<!-- <script setup></script>
-
-
-<template>
-    <div class="button-container">
-        <Button @click="visible = true"><span class="pi pi-plus"></span>ADD PROJECT</Button>
+    <div class="card flex justify-content-end" style="margin: 1.5em;">
+        <Button @click="visible=true" label="ADD PROJECT" />
     </div>
     
-    <div class="card">
-        <DataTable :value="projects" tableStyle="min-width: 50rem">
+    <div class="card" style="font-size: 1.2em;">
+        <DataTable :value="projects" 
+        paginator="true"
+        :rows="5"
+        :rowsPerPageOptions="[5,10,20,50]"
+        template="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
+                currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
+        tableStyle="min-width: 50rem">
             <Column field="id" header="PID"></Column>
             <Column field="name" header="PROJECT NAME"></Column>
             <Column field="project_manager.fullName" header="PROJECT MANAGER"></Column>
@@ -19,52 +35,65 @@
             <Column field="endDate" header="END DATE"></Column>
             <Column field="status" header="STATUS"></Column>
             <Column field="description" header="DESC"></Column>
+            <Column header="ACTION">
+                <template #body="slotProps">
+    
+                    <Button style="margin-right: 3px;" icon="pi pi-pencil" class="p-button-primary" @click="editProject(slotProps.data)" />
+    
+                    <Button icon="pi pi-trash" class="p-button-danger" @click="deleteProject(slotProps.data)" />
+    
+                </template>
+            </Column>
+    
+    
+    
         </DataTable>
     </div>
     
     <Dialog v-model:visible="visible" modal header="ADD PROJECT" :style="{ width: '35rem' }">
+    
         <form @submit.prevent="saveProject">
-            <div class="flex items-center gap-2 mb-4">
-                <label for="pname" class="font-semibold w-24">Project Name : </label>
-                <InputText id="pname" v-model="project.name" class="flex-auto" autocomplete="off" />
-    
+            
+            <div class="flex items-center gap-4 mb-4">
+                <label for="username" class="font-semibold w-24">PROJECT NAME :</label>
+                <InputText v-model="project.name" id="username" class="flex-auto" autocomplete="off" />
+            </div>
+            <div class="flex items-center gap-4 mb-4">
+                <label for="email" class="font-semibold w-24">PROJECT MANAGER :</label>
+                <Select v-model="project.project_manager" :options="users" optionLabel="fullName" placeholder="Select Project Manager" class="w-full md:w-56" />
+            </div>
+            
+            <div class="flex items-center gap-6 mb-4">
+                <label for="sdate" class="font-semibold w-24">START DATE :</label>
+                <InputText v-model="project.startDate" type="date" id="sdate" class="flex-auto" autocomplete="off" />
+            </div>
+            <div class="flex items-center gap-8 mb-4">
+                <label for="edate" class="font-semibold w-24">END DATE :</label>
+                <InputText v-model="project.endDate" type="date" id="edate" class="flex-auto" autocomplete="off" />
             </div>
     
-            <div class="flex items-center gap-3 mb-4">
-                <label for="pmanager" class="font-semibold w-24">Project Manager : </label>
-                <Select v-model:modelValue="project.project_manager" :options="users" optionLabel="fullName" placeholder="Select Project Manager" class="w-full md:w-56" />
-            </div>
-            <label>{{ project.project_manager }}</label>
-    
-            <div class="flex items-center gap-5 mb-4">
-                <label for="sdate" class="font-semibold w-24">Start Date : </label>
-                <InputText id="sdate" type="date" v-model="project.startDate" class="flex-auto" autocomplete="off" />
+            <div class="flex items-center gap-4 mb-4">
+                <label for="pstatus" class="font-semibold w-24">PROJECT STATUS : </label>
+                <Select v-model="project.status" :options="statuses" optionLabel="label" placeholder="Select Project Status" class="w-full md:w-56" />        
             </div>
     
-            <div class="flex items-center gap-5 mb-4">
-                <label for="edate" class="font-semibold w-24">End Date : </label>
-                <InputText id="edate" type="date" v-model="project.endDate" class="flex-auto" autocomplete="off" />
+            <div class="flex items-center gap-5 mb-8">
+                <label for="pdesc" class="font-semibold w-24">DESCRIPTION</label>
+                <InputText v-model="project.description" id="pdesc" class="flex-auto" autocomplete="off" />
             </div>
     
-            <div class="flex items-center gap-3 mb-4">
-                <label for="pstatus" class="font-semibold w-24">Project Status : </label>
-                <Select id="pstatus" v-model="project.status" :options="statusOptions" optionLabel="status" placeholder="Select Status" class="w-full md:w-40" />
-            </div>
-    
-            <div class="flex items-center gap-2 mb-4">
-                <label for="pdesc" class="font-semibold w-24">Description : </label>
-                <InputText id="pdesc" v-model="project.description" class="flex-auto" autocomplete="off" />
-            </div>
     
             <div class="flex justify-content-center gap-2">
                 <Button type="button" label="Cancel" severity="secondary" @click="visible = false"></Button>
-                <Button type="submit" label="Save" @click="saveProject"></Button>
+                <Button type="submit" label="Save" ></Button>
             </div>
         </form>
     </Dialog>
     </template>
     
     <script setup>
+    // All import here
+    
     import {
         ref,
         onMounted
@@ -74,20 +103,8 @@
     
     const projects = ref();
     const visible = ref(false);
-    
-    const selectedUsers = ref([]); // for selected project manager
-    const users = ref([]); //for list of users
-    
-    // Dummy options for status selection
-    const statusOptions = ref([{
-        status: 'Pending'
-    }, {
-        status: 'Ongoing'
-    }, {
-        status: 'Completed'
-    }]);
-    
-    // Reactive form object to bind the input fields
+    const users = ref();
+    const first = ref(0);
     const project = ref({
         name: '',
         project_manager: null,
@@ -96,6 +113,27 @@
         status: '',
         description: ''
     });
+    
+    const resetProjectForm = () =>{
+        project.value = {
+            name: '',
+            project_manager: null,
+            startDate: '',
+            endDate: '',
+            status: '',
+            description: ''
+    
+        };
+    
+    };
+    
+    const statuses = ref([
+        {label: 'PENDING', value: 'PENDING' },
+        {label: 'ONGOING', value: 'ONGOING'},
+        {label: 'COMPLETED', value: 'COMPLETED'}
+    ]);
+    
+    
     
     onMounted(() => {
         loadProjects();
@@ -108,52 +146,88 @@
         });
     };
     
-    const loadUsers = () => {
-        FetchAllUsers.getAllUsers().then((response) => {
+    const loadUsers = () =>{
+        FetchAllUsers.getAllUsers().then((response)=>{
             users.value = response.data;
         });
     };
     
     const saveProject = () => {
-        // Check if project manager is selected
-        if (project.value.project_manager) {
+        // If the backend only expects an ID for project_manager, extract the ID here
+        const projectToSave = { 
+            ...project.value, 
+           
+            status: project.value.status ? project.value.status.value : null 
     
-            project.value.project_manager = {
-                id: project.value.project_manager.id
-            }; // Send only the ID
-        }
-    
-    
-        const jsonValue = JSON.stringify(project.value);
-    
-        ProjectService.saveProject(jsonValue).then(() => {
-            loadProjects(); // Reload the projects to reflect the new data
+        };
+        
+        ProjectService.saveProject(projectToSave).then(() => {
+            resetProjectForm();
             visible.value = false;
-            resetProject(); // Reset form values
-        }).catch((error) => {
-            console.log("Error saving project: ", error);
+            loadProjects();
         });
     };
     
-    // Function to reset project values after saving
-    const resetProject = () => {
-        project.value = {
-            name: '',
-            project_manager: null,
-            startDate: '',
-            endDate: '',
-            status: '',
-            description: ''
-        };
+    
+    const deleteProject = (project) =>{
+    
+        ProjectService.deleteProject(project.id).then(()=>{
+            loadProjects();
+        }).catch((error)=>{
+            console.log('Error deleting project : ',error);
+        });
     };
+    
     </script>
     
-    <style scoped>
-    .button-container {
-        margin: 15px 25px;
-        display: flex;
-        justify-content: flex-end;
-        margin-bottom: 1rem;
+
+
+    package com.synergytech.services;
+
+    
+    @Service
+    public class ProjectService {
+    
+        @Autowired
+        private ProjectRepository projectRepository;
+        
+        
+        public List<Project> getAllProjects(){
+            return projectRepository.findAll();
+        }
+        
+        
+      
     }
-    </style> -->
+    
+    package com.synergytech.controllers;
+
+@CrossOrigin("http://localhost:5173/")
+@RestController
+@RequestMapping("/api/projects")
+public class ProjectController {
+
+	@Autowired
+	private ProjectService projectService;
+
+	@GetMapping
+	public ResponseEntity<List<Project>> getAllProjects() {
+		List<Project> projects = projectService.getAllProjects();
+		return new ResponseEntity<>(projects, HttpStatus.OK);
+	}
+}
+
+package com.synergytech.repositories;
+
+
+
+public interface ProjectRepository extends JpaRepository<Project, Long>{
+
+}
+
+
+
+
+
+    
     

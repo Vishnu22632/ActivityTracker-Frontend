@@ -28,7 +28,7 @@ class UserService {
 
     // Update user data
     updateUser(id,user){
-        return axios.put(`${api_url}/${user.id}`,user);
+        return axios.put(`${api_url}/${id}`,user);
     }
 
     // Delete user

@@ -5,12 +5,14 @@
 
 <div class="card" style="font-size: 1.2em;">
     <DataTable :value="projects" 
-    paginator="true"
-    :rows="5"
-    :rowsPerPageOptions="[5,10,20,50]"
-    template="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
-            currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
-    tableStyle="min-width: 50rem">
+    tableStyle="min-width: 50rem" 
+    :paginator="true" 
+    :rows="rows" 
+    :lazy="true" 
+    :rowsPerPageOptions="[5,10,20,50]" 
+    :totalRecords="totalRecords" 
+    paginatorTemplate="RowsPerPageDropdown FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink" currentPageReportTemplate="{first} to {last} of {totalRecords}" @page="onLazyLoad">
+
         <Column field="id" header="PID"></Column>
         <Column field="name" header="PROJECT NAME"></Column>
         <Column field="project_manager.fullName" header="PROJECT MANAGER"></Column>
@@ -84,10 +86,12 @@ import {
 import ProjectService from '@/services/ProjectService';
 import FetchAllUsers from '@/services/FetchAllUsers';
 
-const projects = ref();
+const projects = ref([]);
 const visible = ref(false);
-const users = ref();
+const users = ref([]);
+const rows = ref(5);
 const first = ref(0);
+const totalRecords = ref(0);
 const project = ref({
     name: '',
     project_manager: null,
@@ -117,16 +121,18 @@ const statuses = ref([
 ]);
 
 
-
-onMounted(() => {
-    loadProjects();
-    loadUsers();
-});
-
-const loadProjects = () => {
-    ProjectService.getProjects().then((response) => {
-        projects.value = response.data;
+const loadProjects = (page = 0, size = 5) => {
+    ProjectService.getProjects(page, size).then(response => {
+        projects.value = response.data.content;
+        totalRecords.value = response.data.totalElements;
+        first.value = page * size;
     });
+};
+
+const onLazyLoad = (event) => {
+    const { first, rows } = event;
+    const page = first / rows;
+    loadProjects(page, rows);
 };
 
 const loadUsers = () =>{
@@ -134,6 +140,13 @@ const loadUsers = () =>{
         users.value = response.data;
     });
 };
+
+
+onMounted(() => {
+    loadProjects();
+    loadUsers();
+});
+
 
 const saveProject = () => {
     // If the backend only expects an ID for project_manager, extract the ID here

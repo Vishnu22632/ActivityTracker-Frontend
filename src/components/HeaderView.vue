@@ -1,5 +1,5 @@
 <template>
-    <div class="card" style="font-size: 1.3em; font-weight: bolder;">
+    <div class="card" style="font-size: 1.5em; font-weight: bolder;">
         <Menubar :model="items" />
     </div>
 </template>
@@ -37,3 +37,4 @@ const items = ref([
     }
 ]);
 </script>
+

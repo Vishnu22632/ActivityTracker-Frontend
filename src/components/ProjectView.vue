@@ -1,6 +1,6 @@
 <template>
 <div class="card flex justify-content-end" style="margin: 1.5em;">
-    <Button @click="visible=true" label="ADD PROJECT" />
+    <Button @click="openAddUserDialog" label="ADD PROJECT" />
 </div>
 
 <div class="card" style="font-size: 1.2em;">
@@ -35,7 +35,7 @@
     </DataTable>
 </div>
 
-<Dialog v-model:visible="visible" modal header="ADD PROJECT" :style="{ width: '35rem' }">
+<Dialog v-model:visible="visible" modal :header="projectHeaderDialog" :style="{ width: '35rem' }">
 
     <form @submit.prevent="saveProject">
         
@@ -86,12 +86,23 @@ import {
 import ProjectService from '@/services/ProjectService';
 import FetchAllUsers from '@/services/FetchAllUsers';
 
+
 const projects = ref([]);
 const visible = ref(false);
 const users = ref([]);
 const rows = ref(5);
 const first = ref(0);
 const totalRecords = ref(0);
+const selectedProject = ref([]);
+const projectHeaderDialog = ref("ADD PROJECT");
+
+const openAddUserDialog = ()=>{
+    resetProjectForm();
+    projectHeaderDialog.value = "ADD PROJECT";
+    visible.value = true;
+};
+
+
 const project = ref({
     name: '',
     project_manager: null,
@@ -162,6 +173,15 @@ const saveProject = () => {
         visible.value = false;
         loadProjects();
     });
+};
+
+const editProject = (selectedProject) =>{
+    project.value={
+        ...selectedProject,
+        status: statuses.value.find(status => status.value === selectedProject.status) 
+    }
+    projectHeaderDialog.value = "UPDATE PROJECT";
+    visible.value = true;
 };
 
 

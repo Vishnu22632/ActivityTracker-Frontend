@@ -13,6 +13,12 @@ class ProjectService{
         return axios.post(api_url_project, project);
     }
 
+     // Delete project
+     deleteProject(id){
+        return axios.delete(`${api_url_project}/${id}`);
+    }
+
+
 }
 
 export default new ProjectService();

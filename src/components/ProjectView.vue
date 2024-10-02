@@ -1,10 +1,16 @@
 <template>
-<div class="card flex justify-content-end">
+<div class="card flex justify-content-end" style="margin: 1.5em;">
     <Button @click="visible=true" label="ADD PROJECT" />
 </div>
 
 <div class="card" style="font-size: 1.2em;">
-    <DataTable :value="projects" tableStyle="min-width: 50rem">
+    <DataTable :value="projects" 
+    paginator="true"
+    :rows="5"
+    :rowsPerPageOptions="[5,10,20,50]"
+    template="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
+            currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
+    tableStyle="min-width: 50rem">
         <Column field="id" header="PID"></Column>
         <Column field="name" header="PROJECT NAME"></Column>
         <Column field="project_manager.fullName" header="PROJECT MANAGER"></Column>
@@ -12,6 +18,18 @@
         <Column field="endDate" header="END DATE"></Column>
         <Column field="status" header="STATUS"></Column>
         <Column field="description" header="DESC"></Column>
+        <Column header="ACTION">
+            <template #body="slotProps">
+
+                <Button style="margin-right: 3px;" icon="pi pi-pencil" class="p-button-primary" @click="editProject(slotProps.data)" />
+
+                <Button icon="pi pi-trash" class="p-button-danger" @click="deleteProject(slotProps.data)" />
+
+            </template>
+        </Column>
+
+
+
     </DataTable>
 </div>
 
@@ -27,7 +45,7 @@
             <label for="email" class="font-semibold w-24">PROJECT MANAGER :</label>
             <Select v-model="project.project_manager" :options="users" optionLabel="fullName" placeholder="Select Project Manager" class="w-full md:w-56" />
         </div>
-        <label>{{ project.project_manager }}</label>
+        
         <div class="flex items-center gap-6 mb-4">
             <label for="sdate" class="font-semibold w-24">START DATE :</label>
             <InputText v-model="project.startDate" type="date" id="sdate" class="flex-auto" autocomplete="off" />
@@ -69,7 +87,7 @@ import FetchAllUsers from '@/services/FetchAllUsers';
 const projects = ref();
 const visible = ref(false);
 const users = ref();
-
+const first = ref(0);
 const project = ref({
     name: '',
     project_manager: null,
@@ -78,6 +96,19 @@ const project = ref({
     status: '',
     description: ''
 });
+
+const resetProjectForm = () =>{
+    project.value = {
+        name: '',
+        project_manager: null,
+        startDate: '',
+        endDate: '',
+        status: '',
+        description: ''
+
+    };
+
+};
 
 const statuses = ref([
     {label: 'PENDING', value: 'PENDING' },
@@ -109,14 +140,24 @@ const saveProject = () => {
     const projectToSave = { 
         ...project.value, 
        
-        
         status: project.value.status ? project.value.status.value : null 
 
     };
     
     ProjectService.saveProject(projectToSave).then(() => {
+        resetProjectForm();
         visible.value = false;
         loadProjects();
+    });
+};
+
+
+const deleteProject = (project) =>{
+
+    ProjectService.deleteProject(project.id).then(()=>{
+        loadProjects();
+    }).catch((error)=>{
+        console.log('Error deleting project : ',error);
     });
 };
 

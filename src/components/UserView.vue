@@ -71,10 +71,11 @@
         <Column header="ACTION">
             <template #body="slotProps">
 
-                <Button style="margin-right: 3px;" icon="pi pi-pencil" class="p-button-primary" @click="editUser(slotProps.data)" />
+                <Button  icon="pi pi-pencil" class="p-button-primary" @click="editUser(slotProps.data)" />
 
-                <Button icon="pi pi-trash" class="p-button-danger" @click="deleteUser(slotProps.data)" />
-
+                <Button icon="pi pi-trash" style="margin: 0 3px;" class="p-button-danger" @click="deleteUser(slotProps.data)" />
+                
+                <Button icon="pi pi-eye" class="p-button-info custom-override"  />
             </template>
         </Column>
 

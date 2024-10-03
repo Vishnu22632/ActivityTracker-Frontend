@@ -1,4 +1,8 @@
 <template>
+
+    <Toast />
+    <ConfirmDialog />
+
 <div class="card flex justify-content-end" style="margin: 1.5em;">
     <Button @click="openAddUserDialog" label="ADD PROJECT" />
 </div>
@@ -21,11 +25,15 @@
         <Column field="status" header="STATUS"></Column>
         <Column field="description" header="DESC"></Column>
         <Column header="ACTION">
+            
             <template #body="slotProps">
 
-                <Button style="margin-right: 3px;" icon="pi pi-pencil" class="p-button-primary" @click="editProject(slotProps.data)" />
+                <Button  icon="pi pi-pencil" class="p-button-primary" @click="editProject(slotProps.data)" />
 
-                <Button icon="pi pi-trash" class="p-button-danger" @click="deleteProject(slotProps.data)" />
+                <Button icon="pi pi-trash" style="margin: 0 3px;" class="p-button-danger" @click="deleteProject(slotProps.data)" />
+
+                <Button icon="pi pi-eye" class="p-button-info custom-override"  />
+
 
             </template>
         </Column>
@@ -85,7 +93,9 @@ import {
 } from 'vue';
 import ProjectService from '@/services/ProjectService';
 import FetchAllUsers from '@/services/FetchAllUsers';
-
+import Toast from 'primevue/toast';
+import { useToast } from 'primevue/usetoast';
+import { useConfirm } from 'primevue/useconfirm';
 
 const projects = ref([]);
 const visible = ref(false);
@@ -95,6 +105,8 @@ const first = ref(0);
 const totalRecords = ref(0);
 const selectedProject = ref([]);
 const projectHeaderDialog = ref("ADD PROJECT");
+const toast = useToast();
+const confirm = useConfirm();
 
 const openAddUserDialog = ()=>{
     resetProjectForm();
@@ -169,9 +181,19 @@ const saveProject = () => {
     };
     
     ProjectService.saveProject(projectToSave).then(() => {
+
+        toast.add({
+            severity: 'success', summary: 'Success Message', detail: 'Project added sucessfully', life: 3000
+        });
+
         resetProjectForm();
         visible.value = false;
         loadProjects();
+    }).catch((error)=>{
+        toast.add({
+            severity: 'error', summary: 'Error Message' , detail: error, life: 3000
+        });
+        console.log('Error :', error);
     });
 };
 
@@ -187,11 +209,42 @@ const editProject = (selectedProject) =>{
 
 const deleteProject = (project) =>{
 
-    ProjectService.deleteProject(project.id).then(()=>{
-        loadProjects();
-    }).catch((error)=>{
-        console.log('Error deleting project : ',error);
+    confirm.require({
+        message: 'Are you sure you want to delete this record?',
+        header: 'Confirmation',
+        icon: 'pi pi-exclamation-triangle',
+        rejectProps: {
+            label: 'Cancel',
+            severity: 'secondary',
+            outlined: true
+        },
+        acceptProps: {
+            label: 'Save'
+        },
+        accept: () =>{
+            ProjectService.deleteProject(project.id).then(()=>{
+                toast.add(
+            {
+                severity: 'success', summary: 'deleted', detail: 'Project deleted successfully', life: 3000
+            }
+        );
+                loadProjects();
+
+
+            }).catch((error)=>{
+                toast.add(
+            {
+                severity: 'success', summary: 'deleted', detail: 'Project deleted successfully', life: 3000
+            }
+        );
+            });
+        },
+        reject: () =>{
+            toast.add({ severity: 'error', summary: 'Rejected', detail: 'You have rejected', life: 3000 });
+        }
+
     });
+
 };
 
 </script>

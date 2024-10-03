@@ -9,9 +9,24 @@ class TaskService{
     }
 
     saveTask(task) {
+       
         console.log(task);
+    
         return axios.post(api_url_task, task);
     }
+
+     // Delete user
+     deleteTask(id){
+        return axios.delete(`${api_url_task}/${id}`);
+    }
+
+
+    // Update user data
+    updateTask(id,task){
+        return axios.put(`${api_url_task}/${id}`,task);
+    }
+
+
 
 }
 

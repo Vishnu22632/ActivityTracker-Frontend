@@ -7,6 +7,11 @@ class FetchAllUsers{
     getAllUsers(){
         return axios.get(api_url_users);
     }
+
+    getAllProjects(){
+        return axios.get(api_url_users)
+    }
+
 }
 
 export default new FetchAllUsers();

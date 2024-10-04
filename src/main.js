@@ -19,7 +19,7 @@ import Dialog from 'primevue/dialog';
 import Textarea from 'primevue/textarea';
 import AutoComplete from 'primevue/autocomplete';
 import Select from 'primevue/select';
-
+import Paginator from 'primevue/paginator';
 
 // For confim Dialog Box 
 import ConfirmDialog from 'primevue/confirmdialog';
@@ -55,6 +55,7 @@ app.component('ConfirmDialog',ConfirmDialog);
 app.component('Textarea',Textarea);
 app.component('AutoComplete',AutoComplete);
 app.component('Select', Select);
+app.component('Paginator',Paginator);
 
 app.mount('#app');
 

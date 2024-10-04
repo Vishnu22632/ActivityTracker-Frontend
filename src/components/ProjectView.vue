@@ -32,7 +32,7 @@
 
                 <Button icon="pi pi-trash" style="margin: 0 3px;" class="p-button-danger" @click="deleteProject(slotProps.data)" />
 
-                <Button icon="pi pi-eye" class="p-button-info custom-override"  />
+                <Button icon="pi pi-eye" @click="openProjectDetails(slotProps.data)"  class="p-button-info custom-override"  />
 
 
             </template>
@@ -82,6 +82,27 @@
         </div>
     </form>
 </Dialog>
+
+
+        <!-- Project Details Dailog  -->
+<Dialog v-model:visible="projectDetailsHeader" modal :style="{ width: '35rem' }">
+
+    <template #header>
+        <div style="text-align: center; width: 100%; font-weight: bolder; font-size: 1.3em;">
+            PROJECT DETAILS
+        </div>
+    </template>
+
+    <div v-if="selectedProject">
+        <p>Project Id : {{ selectedProject.id }}</p>
+
+    </div>
+
+    
+</Dialog>
+
+                    
+
 </template>
 
 <script setup>
@@ -103,16 +124,19 @@ const users = ref([]);
 const rows = ref(5);
 const first = ref(0);
 const totalRecords = ref(0);
-const selectedProject = ref([]);
+const selectedProject = ref({});
 const projectHeaderDialog = ref("ADD PROJECT");
 const toast = useToast();
 const confirm = useConfirm();
+let projectDetailsHeader = ref(false);
+
 
 const openAddUserDialog = ()=>{
     resetProjectForm();
     projectHeaderDialog.value = "ADD PROJECT";
     visible.value = true;
 };
+
 
 
 const project = ref({
@@ -123,6 +147,16 @@ const project = ref({
     status: '',
     description: ''
 });
+
+
+let openProjectDetails = (selectedProject) =>{
+
+project.value = {
+    ...selectedProject
+}
+
+projectDetailsHeader.value = true;
+}
 
 const resetProjectForm = () =>{
     project.value = {

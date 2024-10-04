@@ -1,233 +1,308 @@
-import axios from "axios";
-
-const api_url_project = "http://localhost:9696/api/projects";
-
-class ProjectService{
-
-    getProjects(){
-        return axios.get(api_url_project);
-    }
-
-    
-
-}
-
-export default new ProjectService();
-
-
 <template>
+<div class="card" style="font-size: 1.2em;">
+
+    <Toast />
+    <ConfirmDialog />
+
     <div class="card flex justify-content-end" style="margin: 1.5em;">
-        <Button @click="visible=true" label="ADD PROJECT" />
+        <Button @click="openTaskDailog" label="ADD TASK" />
     </div>
-    
+
     <div class="card" style="font-size: 1.2em;">
-        <DataTable :value="projects" 
-        paginator="true"
-        :rows="5"
-        :rowsPerPageOptions="[5,10,20,50]"
-        template="FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
-                currentPageReportTemplate="Showing {first} to {last} of {totalRecords}"
-        tableStyle="min-width: 50rem">
-            <Column field="id" header="PID"></Column>
-            <Column field="name" header="PROJECT NAME"></Column>
-            <Column field="project_manager.fullName" header="PROJECT MANAGER"></Column>
-            <Column field="startDate" header="START DATE"></Column>
-            <Column field="endDate" header="END DATE"></Column>
-            <Column field="status" header="STATUS"></Column>
-            <Column field="description" header="DESC"></Column>
+        <DataTable :value="tasks" tableStyle="min-width: 50rem">
+
+            <Column field="id" header="TID"></Column>
+            <Column field="project.name" header="PROJECT NAME"></Column>
+            <Column field="name" header="TASK"></Column>
+            <Column field="assignedUser.fullName" header="WORKED BY"></Column>
+
+            <Column field="project.startDate" header="PROJECT START DATE"></Column>
+            <Column field="project.endDate" header="PROJECT END DATE"></Column>
+            <Column field="status" header="TASK STATUS"></Column>
+            <Column field="description" header="TASK DESC"></Column>
+
             <Column header="ACTION">
+
                 <template #body="slotProps">
-    
-                    <Button style="margin-right: 3px;" icon="pi pi-pencil" class="p-button-primary" @click="editProject(slotProps.data)" />
-    
-                    <Button icon="pi pi-trash" class="p-button-danger" @click="deleteProject(slotProps.data)" />
-    
+
+                    <Button icon="pi pi-pencil" class="p-button-primary" @click="editTask(slotProps.data)" />
+
+                    <Button icon="pi pi-trash" style="margin: 0 3px;" class="p-button-danger" @click="deleteTask(slotProps.data)" />
+
+                    <Button icon="pi pi-eye" @click="openTaskDetailsDialog(slotProps.data)" class="p-button-info custom-override" />
+
                 </template>
             </Column>
-    
-    
-    
+
         </DataTable>
+        <Paginator :rows="10" :totalRecords="120" :rowsPerPageOptions="[10, 20, 30]"></Paginator>
     </div>
-    
-    <Dialog v-model:visible="visible" modal header="ADD PROJECT" :style="{ width: '35rem' }">
-    
-        <form @submit.prevent="saveProject">
-            
-            <div class="flex items-center gap-4 mb-4">
-                <label for="username" class="font-semibold w-24">PROJECT NAME :</label>
-                <InputText v-model="project.name" id="username" class="flex-auto" autocomplete="off" />
-            </div>
-            <div class="flex items-center gap-4 mb-4">
-                <label for="email" class="font-semibold w-24">PROJECT MANAGER :</label>
-                <Select v-model="project.project_manager" :options="users" optionLabel="fullName" placeholder="Select Project Manager" class="w-full md:w-56" />
-            </div>
-            
-            <div class="flex items-center gap-6 mb-4">
-                <label for="sdate" class="font-semibold w-24">START DATE :</label>
-                <InputText v-model="project.startDate" type="date" id="sdate" class="flex-auto" autocomplete="off" />
-            </div>
+
+    <Dialog v-model:visible="visible" modal :header="taskHeader" :style="{ width: '35rem' }">
+
+        <form @submit.prevent="saveTask">
+
             <div class="flex items-center gap-8 mb-4">
-                <label for="edate" class="font-semibold w-24">END DATE :</label>
-                <InputText v-model="project.endDate" type="date" id="edate" class="flex-auto" autocomplete="off" />
+                <label for="projecname" class="font-semibold w-24">PROJECT :</label>
+                <Select v-model="taskForm.project" :options="projects" optionLabel="name" placeholder="Select Project" class="w-full md:w-56" />
             </div>
-    
-            <div class="flex items-center gap-4 mb-4">
-                <label for="pstatus" class="font-semibold w-24">PROJECT STATUS : </label>
-                <Select v-model="project.status" :options="statuses" optionLabel="label" placeholder="Select Project Status" class="w-full md:w-56" />        
+
+            <div class="flex items-center gap-6 mb-4">
+                <label for="tname" class="font-semibold w-24">TASK NAME : </label>
+                <InputText v-model="taskForm.name" id="tname" class="flex-auto" autocomplete="off" />
             </div>
-    
-            <div class="flex items-center gap-5 mb-8">
-                <label for="pdesc" class="font-semibold w-24">DESCRIPTION</label>
-                <InputText v-model="project.description" id="pdesc" class="flex-auto" autocomplete="off" />
+
+            <div class="flex items-center gap-8 mb-4">
+                <label for="projecname" class="font-semibold w-24">WORKED By</label>
+                <Select v-model="taskForm.assignedUser" :options="users" optionLabel="fullName" placeholder="Select Employee" class="w-full md:w-56" />
             </div>
-    
-    
+
+            <div class="flex items-center gap-7 mb-4">
+                <label for="tstatus" class="font-semibold w-24">TASK STATUS : </label>
+                <Select v-model="taskForm.status" :options="statuses" optionLabel="label" placeholder="Select Task Status" class="w-full md:w-56" />
+            </div>
+            <div class="flex items-center gap-6 mb-4">
+                <label for="tdesc" class="font-semibold w-24">TASK DESC : </label>
+                <InputText v-model="taskForm.description" id="tdesc" class="flex-auto" autocomplete="off" />
+            </div>
+
             <div class="flex justify-content-center gap-2">
                 <Button type="button" label="Cancel" severity="secondary" @click="visible = false"></Button>
-                <Button type="submit" label="Save" ></Button>
+                <Button type="submit" label="Save"></Button>
             </div>
         </form>
     </Dialog>
-    </template>
-    
-    <script setup>
-    // All import here
-    
-    import {
-        ref,
-        onMounted
-    } from 'vue';
-    import ProjectService from '@/services/ProjectService';
-    import FetchAllUsers from '@/services/FetchAllUsers';
-    
-    const projects = ref();
-    const visible = ref(false);
-    const users = ref();
-    const first = ref(0);
-    const project = ref({
-        name: '',
-        project_manager: null,
-        startDate: '',
-        endDate: '',
-        status: '',
-        description: ''
-    });
-    
-    const resetProjectForm = () =>{
-        project.value = {
-            name: '',
-            project_manager: null,
-            startDate: '',
-            endDate: '',
-            status: '',
-            description: ''
-    
-        };
-    
-    };
-    
-    const statuses = ref([
-        {label: 'PENDING', value: 'PENDING' },
-        {label: 'ONGOING', value: 'ONGOING'},
-        {label: 'COMPLETED', value: 'COMPLETED'}
-    ]);
-    
-    
-    
-    onMounted(() => {
-        loadProjects();
-        loadUsers();
-    });
-    
-    const loadProjects = () => {
-        ProjectService.getProjects().then((response) => {
-            projects.value = response.data;
-        });
-    };
-    
-    const loadUsers = () =>{
-        FetchAllUsers.getAllUsers().then((response)=>{
-            users.value = response.data;
-        });
-    };
-    
-    const saveProject = () => {
-        // If the backend only expects an ID for project_manager, extract the ID here
-        const projectToSave = { 
-            ...project.value, 
-           
-            status: project.value.status ? project.value.status.value : null 
-    
-        };
-        
-        ProjectService.saveProject(projectToSave).then(() => {
-            resetProjectForm();
-            visible.value = false;
-            loadProjects();
-        });
-    };
-    
-    
-    const deleteProject = (project) =>{
-    
-        ProjectService.deleteProject(project.id).then(()=>{
-            loadProjects();
-        }).catch((error)=>{
-            console.log('Error deleting project : ',error);
-        });
-    };
-    
-    </script>
-    
 
+    <!-- Task Details Dialog  -->
+    <Dialog v-model:visible="visibleTaskDetailsDialog" modal :style="{ width: '35rem' }">
+        <template #header>
+            <div style="text-align: center; width: 100%; font-size: 1.3em; font-weight: bolder;">
+                TASK DETAILS
+            </div>
+        </template>
+        <hr />
 
-    package com.synergytech.services;
+        <div v-if="selectedTask" style="font-size: 1.2em;">
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
+                <tr>
+                    <td><strong>Task ID:</strong></td>
+                    <td>{{ selectedTask.id }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Project Name:</strong></td>
+                    <td>{{ selectedTask.project.name }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Task Name:</strong></td>
+                    <td>{{ selectedTask.name }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Worked By:</strong></td>
+                    <td>{{ selectedTask.assignedUser.fullName }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Project Start Date:</strong></td>
+                    <td>{{ selectedTask.project.startDate }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Project End Date:</strong></td>
+                    <td>{{ selectedTask.project.endDate }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Task Status:</strong></td>
+                    <td>{{ selectedTask.status }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Task Description:</strong></td>
+                    <td>{{ selectedTask.description }}</td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="flex justify-content-center gap-2">
+            <Button>PRINT</Button>
+            <Button class="p-button-danger" @click="visibleTaskDetailsDialog=false">CANCEL</Button>
+
+        </div>
+
+    </Dialog>
+
+</div>
+</template>
 
     
-    @Service
-    public class ProjectService {
     
-        @Autowired
-        private ProjectRepository projectRepository;
-        
-        
-        public List<Project> getAllProjects(){
-            return projectRepository.findAll();
-        }
-        
-        
-      
+<script>
+import {
+    ref,
+    onMounted
+} from 'vue';
+import TaskService from '@/services/TaskService';
+import FetchAllUsers from '@/services/FetchAllUsers';
+import FetchAllProjects from '@/services/FetchAllProjects';
+import {
+    useToast
+} from 'primevue/usetoast';
+import {
+    useConfirm
+} from 'primevue/useconfirm';
+
+const toast = useToast();
+const confirm = useConfirm();
+const tasks = ref([]);
+const visible = ref(false);
+const projects = ref([]);
+const users = ref([]);
+const selectedTask = ref({});
+let taskHeader = ref("ADD TASK");
+let visibleTaskDetailsDialog = ref(false);
+
+let openTaskDailog = () => {
+    taskHeader = "ADD TASK",
+        visible.value = true
+};
+
+const openTaskDetailsDialog = (task) => {
+
+    selectedTask.value = {
+        ...task
     }
-    
-    package com.synergytech.controllers;
+    console.log(selectedTask);
 
-@CrossOrigin("http://localhost:5173/")
-@RestController
-@RequestMapping("/api/projects")
-public class ProjectController {
-
-	@Autowired
-	private ProjectService projectService;
-
-	@GetMapping
-	public ResponseEntity<List<Project>> getAllProjects() {
-		List<Project> projects = projectService.getAllProjects();
-		return new ResponseEntity<>(projects, HttpStatus.OK);
-	}
+    visibleTaskDetailsDialog.value = true;
 }
 
-package com.synergytech.repositories;
+const statuses = ref([{
+        label: 'PENDING',
+        value: 'PENDING'
+    },
+    {
+        label: 'ONGOING',
+        value: 'ONGOING'
+    },
+    {
+        label: 'COMPLETED',
+        value: 'COMPLETED'
+    }
+]);
 
+const taskForm = ref({
+    name: '',
+    status: '',
+    description: '',
+    project: '',
+    assignedUser: ''
+});
 
+const resetTaskForm = () => {
+    taskForm.value = {
+        name: '',
+        status: '',
+        description: '',
+        project: '',
+        assignedUser: ''
+    }
+};
 
-public interface ProjectRepository extends JpaRepository<Project, Long>{
+onMounted(() => {
+    loadTasks();
+    loadUsers();
+    loadProjects();
+})
+
+const loadTasks = () => {
+    TaskService.getTasks().then((response) => {
+        tasks.value = response.data;
+        console.log(tasks.value);
+    })
+}
+
+const loadUsers = () => {
+    FetchAllUsers.getAllUsers().then((response) => {
+        users.value = response.data;
+    })
+};
+
+const loadProjects = () => {
+    FetchAllProjects.getAllProjects().then((response) => {
+        projects.value = response.data;
+    })
+};
+
+const editTask = (selectedTask) => {
+
+    taskForm.value = {
+        ...selectedTask,
+        project: projects.value.find(project => project.id === selectedTask.project.id), // Find the corresponding project
+
+        status: statuses.value.find(status => status.value === selectedTask.status)
+    }
+    taskHeader = "UPDATE TASK",
+        visible.value = true
 
 }
 
+const saveTask = () => {
 
+    const taskToSave = {
+        ...taskForm.value,
 
+        // status: project.value.status ? project.value.status.value : null 
 
+        status: taskForm.value.status ? taskForm.value.status.value : null
 
-    
-    
+    };
+
+    TaskService.saveTask(taskToSave).then(() => {
+        toast.add({
+            severity: 'success',
+            summary: 'Success',
+            detail: 'Task added successfully',
+            life: 3000
+        });
+        resetTaskForm();
+        visible.value = false;
+        loadTasks();
+    }).catch((error) => {
+        console.log('Error Saving Task : ', error);
+    });
+};
+
+const deleteTask = (task) => {
+
+    confirm.require({
+        message: 'Are you sure you want to delete this task?',
+        header: 'Confirmation',
+        icon: 'pi pi-exclamation-triangle',
+        rejectProps: {
+            label: 'Cancel',
+            severity: 'secondary',
+            outlined: true
+        },
+        acceptProps: {
+            label: 'Save'
+        },
+        accept: () => {
+            TaskService.deleteTask(task.id).then(() => {
+                toast.add({
+                    severity: 'success',
+                    summary: 'Success',
+                    detail: 'Task deleted successfully',
+                    life: 3000
+                });
+                loadTasks();
+            }).catch((error) => {
+                console.log('Error deleting task : ', error);
+            });
+        },
+        reject: () => {
+            toast.add({
+                severity: 'error',
+                summary: 'Rejected',
+                detail: 'You have rejected',
+                life: 3000
+            });
+        }
+    });
+};
+</script>

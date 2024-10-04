@@ -71,11 +71,11 @@
         <Column header="ACTION">
             <template #body="slotProps">
 
-                <Button  icon="pi pi-pencil" class="p-button-primary" @click="editUser(slotProps.data)" />
+                <Button icon="pi pi-pencil" class="p-button-primary" @click="editUser(slotProps.data)" />
 
                 <Button icon="pi pi-trash" style="margin: 0 3px;" class="p-button-danger" @click="deleteUser(slotProps.data)" />
-                
-                <Button icon="pi pi-eye" class="p-button-info custom-override"  />
+
+                <Button icon="pi pi-eye" @click="openUserDetailsDailog(slotProps.data)" class="p-button-info custom-override" />
             </template>
         </Column>
 
@@ -104,6 +104,62 @@
             <Button type="button" label="Cancel" severity="secondary" @click="visible = false"></Button>
             <Button type="button" label="Save" @click="saveUser"></Button>
         </div>
+    </Dialog>
+
+    <!-- Dialog for view userList and export in pdf -->
+    <Dialog v-model:visible="visibleUserDetails" modal :style="{ width: '35rem' }">
+
+        <template #header>
+            <div style="text-align: center; width: 100%; font-weight: bolder; font-size: 1.3em;">
+                USER DETAILS
+            </div>
+
+        </template>
+        <hr />
+
+        <div v-if="selectedUser" style="font-size: 1.2em;">
+
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px;">
+
+                <tbody>
+
+                
+
+                <tr>
+                    <td><strong>USER ID :</strong></td>
+                    <td>{{ selectedUser.id }}</td>
+                </tr>
+
+                <tr>
+                    <td><strong>FULL NAME : </strong></td>
+                    <td>{{ selectedUser.fullName }}</td>
+                </tr>
+
+                <tr>
+                    <td><strong>EMAIL : </strong></td>
+                    <td>{{ selectedUser.email }}</td>
+                </tr>
+
+                <tr>
+                    <td><strong>ADDRESS : </strong></td>
+                    <td>{{ selectedUser.address }}</td>
+                </tr>
+
+                <tr>
+                    <td><strong>PASSWORD : </strong></td>
+                    <td>{{ selectedUser.password }}</td>
+                </tr>
+
+            </tbody>
+
+            </table>
+        </div>
+
+        <div class="flex justify-content-center gap-2">
+            <Button>PRINT</Button>
+            <Button class="p-button-danger" @click="visibleUserDetails = false">CANCEL</Button>
+        </div>
+
     </Dialog>
 
 </div>
@@ -137,6 +193,8 @@ const rows = ref(5);
 const totalRecords = ref(0);
 const first = ref(0);
 const visible = ref(false);
+let visibleUserDetails = ref(false);
+const selectedUser = ref({});
 
 const filters = ref({
     id: '',
@@ -160,6 +218,16 @@ const openAddUserDialog = () => {
     visible.value = true; // open the dialog
 }
 
+let openUserDetailsDailog = (user) => {
+
+    selectedUser.value = {
+        ...user
+    }; // copy user data into selectedUser
+    visibleUserDetails.value = true;
+
+    console.log(user);
+}
+
 // Method to open the dialog for editing the user
 const editUser = (user) => {
     userForm.value = {
@@ -169,7 +237,6 @@ const editUser = (user) => {
     visible.value = true; // open the dialog for editing
 
 }
-
 
 // Handle adding and editing users
 const saveUser = () => {
@@ -220,7 +287,7 @@ const saveUser = () => {
                 }).catch(error => {
                     toast.add({
                         severity: 'error',
-                        summary: 'Error',
+                        summary: error,
                         detail: 'Failed to add user.',
                         life: 3000
                     });
